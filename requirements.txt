@@ -1,0 +1,2 @@
+# SpecGap runtime — Python 3.10+
+z3-solver>=4.12

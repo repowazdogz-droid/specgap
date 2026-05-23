@@ -1,0 +1,6 @@
+# SpecGap MCP wrapper — local stdio server
+mcp>=1.0
+z3-solver>=4.12
+
+# Install SpecGap from parent directory:
+#   pip install -e ..

@@ -1,0 +1,7 @@
+{
+  "title": "Paraphrased air-gapped sandbox",
+  "stakeholder_intent": "The container must be air-gapped from any external service and must not communicate with anything outside its own isolated execution cell.",
+  "formalized_policy": "Localhost connections are allowed. External internet access is denied.",
+  "implementation_claim": "The sandbox blocks external network access but permits loopback communication.",
+  "expected_issue": "Rule-based extraction may miss the 'air-gapped' phrasing and yield zero constraints for the stakeholder intent. Fuzzy/LLM extraction should map it to no_network (or equivalent). Once the intent is recognized as no_network, the policy's localhost allowance is a concrete implication failure in the abstract sandbox model."
+}

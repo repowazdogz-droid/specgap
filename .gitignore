@@ -1,0 +1,26 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+
+# Local PDF build venv (submission only)
+submission/.pdfenv/
+
+# Submission PDF (256-page report — distribute separately, not in repo)
+submission/SPECGAP_FINAL_REPORT.pdf
+
+# Demo site (Vercel deploy + presentation slideshow — hosted separately)
+demo-site/
+
+# Local BoxArena reference clone (optional; not required for pre-flight adapter)
+.boxarena-ref/
+
+# Generated reports (regenerate via CLI; reference copies whitelisted below)
+reports/*
+!reports/demo_report.md
+!reports/05_candidate_evaluation_report.md
+!reports/06_triangulation_disagreement_report.md
+reports/mcp/

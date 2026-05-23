@@ -1,0 +1,7 @@
+{
+  "title": "Read-only evaluation sandbox",
+  "stakeholder_intent": "The evaluation sandbox must use a read-only filesystem. The job cannot modify any files.",
+  "formalized_policy": "The root filesystem is mounted read-only. Writes are allowed to /tmp for scratch space.",
+  "implementation_claim": "The container mounts / read-only and grants a writable tmpfs at /tmp.",
+  "expected_issue": "The stakeholder intent states a read-only filesystem with no file modification, but the policy and implementation permit writes to /tmp. The constraint is weakened."
+}

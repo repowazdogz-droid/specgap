@@ -1,0 +1,145 @@
+"""Tests for structural / Z3 triangulation summary."""
+
+import json
+import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+
+from specgap.cli import analyze
+from specgap.models import Constraint, SpecInput
+from specgap.semantic_diff import diff
+from specgap.triangulation import (
+    TCB_SCOPE,
+    triangulate_analysis,
+    triangulate_layer,
+)
+from specgap.z3_checker import check_implication
+
+EXAMPLES = pathlib.Path(__file__).resolve().parents[1] / "examples"
+
+
+def _load(name: str) -> SpecInput:
+    return SpecInput.from_dict(json.loads((EXAMPLES / name).read_text(encoding="utf-8")))
+
+
+def _c(name: str, source: str) -> Constraint:
+    return Constraint(name=name, source=source, raw_text=name)
+
+
+def test_triangulation_agrees_on_divergence_example():
+    """Example A: structural and Z3 both signal failure."""
+    analysis = analyze(_load("sandbox_no_network.json"))
+    summary = triangulate_analysis(analysis.diff_result, analysis.implications)
+
+    assert len(summary.records) == 2
+    assert summary.all_agree
+    assert not summary.any_disagreement
+    for r in summary.records:
+        assert r.structural_diff == "divergence_detected"
+        assert r.z3_implication == "fails"
+        assert r.agreement is True
+        assert r.counterexample_present is True
+        assert r.tcb_scope == TCB_SCOPE
+
+
+def test_triangulation_disagreement_when_z3_skipped_but_structural_clean():
+    """Rule mode on paraphrased intent: empty extraction — agreement is False."""
+    analysis = analyze(_load("04_paraphrased_sandbox.json"), mode="rule")
+    summary = triangulate_analysis(
+        analysis.diff_result, analysis.implications, intent_empty=True,
+    )
+
+    assert summary.intent_empty is True
+    assert summary.any_disagreement
+    for r in summary.records:
+        assert r.structural_diff == "no_divergence_detected"
+        assert r.z3_implication == "skipped"
+        assert r.agreement is False
+        assert r.counterexample_present is False
+
+
+def test_triangulation_aligned_pass_case():
+    """Synthetic aligned constraints: both structural and Z3 report no problem."""
+    by_source = {
+        "stakeholder_intent": [_c("no_network", "stakeholder_intent")],
+        "formalized_policy": [_c("no_network", "formalized_policy")],
+        "implementation_claim": [_c("no_network", "implementation_claim")],
+    }
+    diff_result = diff(by_source)
+    intent = by_source["stakeholder_intent"]
+    implications = [
+        check_implication(by_source["formalized_policy"], intent,
+                          "Formalized Policy", "Stakeholder Intent"),
+        check_implication(by_source["implementation_claim"], intent,
+                          "Implementation Claim", "Stakeholder Intent"),
+    ]
+    summary = triangulate_analysis(diff_result, implications)
+
+    assert summary.all_agree
+    for r in summary.records:
+        assert r.structural_diff == "no_divergence_detected"
+        assert r.z3_implication == "holds"
+        assert r.agreement is True
+        assert r.counterexample_present is False
+
+
+def test_triangulation_to_dict_shape():
+    analysis = analyze(_load("sandbox_no_network.json"))
+    record = triangulate_layer(
+        "Formalized Policy", "formalized_policy",
+        analysis.diff_result, analysis.implications[0],
+    )
+    d = record.to_dict()
+    assert set(d.keys()) == {
+        "layer", "structural_diff", "z3_implication",
+        "agreement", "counterexample_present", "tcb_scope",
+    }
+    assert d["structural_diff"] in ("divergence_detected", "no_divergence_detected")
+    assert d["z3_implication"] in ("fails", "holds", "skipped")
+    assert isinstance(d["agreement"], bool)
+    assert isinstance(d["counterexample_present"], bool)
+    assert isinstance(d["tcb_scope"], list)
+
+
+def test_example_06_triangulation_disagreement():
+    """Example 06: structural silent, Z3 fails — proves triangulation is not decorative."""
+    analysis = analyze(_load("06_triangulation_disagreement.json"))
+    summary = triangulate_analysis(analysis.diff_result, analysis.implications)
+
+    assert len(analysis.diff_result.divergences) == 0
+    assert summary.any_disagreement
+    for r in summary.records:
+        assert r.structural_diff == "no_divergence_detected"
+        assert r.z3_implication == "fails"
+        assert r.agreement is False
+        assert r.counterexample_present is True
+
+
+def test_report_human_annotation_block():
+    analysis = analyze(_load("06_triangulation_disagreement.json"))
+    from specgap.reporter import build_report, HUMAN_ANNOTATION_HEADER
+
+    report = build_report(
+        _load("06_triangulation_disagreement.json"), analysis.by_source,
+        analysis.diff_result, analysis.implications, analysis.consistencies,
+    )
+    assert HUMAN_ANNOTATION_HEADER in report
+    assert "**HUMAN NOTE**" in report
+    assert "It is not generated by SpecGap" in report
+    assert "Author annotation (not a tool verdict)" not in report
+
+
+def test_report_includes_triangulation_section():
+    analysis = analyze(_load("sandbox_no_network.json"))
+    from specgap.reporter import build_report
+
+    report = build_report(
+        _load("sandbox_no_network.json"), analysis.by_source,
+        analysis.diff_result, analysis.implications, analysis.consistencies,
+    )
+    assert "## Triangulation Summary" in report
+    assert "operate independently" in report.lower()
+    assert "TCB scope" in report
+    assert "cross-validation" not in report.lower()
+    assert "consensus" not in report.lower()

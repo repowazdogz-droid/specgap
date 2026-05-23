@@ -1,0 +1,22 @@
+{
+  "title": "Candidate sandbox policies for a network-isolated, privilege-bounded cell",
+  "stakeholder_intent": "The sandbox must have no network access of any kind, and the process must never escalate privilege beyond what it started with.",
+  "candidates": [
+    {
+      "id": "A",
+      "label": "Reference policy (intent-aligned wording)",
+      "policy": "Policy A keeps the container fully network-isolated with no outbound connectivity. It is privilege-bounded: no privilege escalation is permitted, no setuid binaries may run, and CAP_SYS_ADMIN is dropped."
+    },
+    {
+      "id": "B",
+      "label": "Weakened: localhost network exception",
+      "policy": "Policy B blocks external internet egress but allows localhost connections for the in-cell metrics collector. It remains privilege-bounded: no privilege escalation is permitted, and no setuid execution is allowed."
+    },
+    {
+      "id": "C",
+      "label": "Weakened: setuid execution allowance",
+      "policy": "Policy C keeps the container network-isolated with no outbound connectivity, but permits setuid binary execution for a privileged maintenance helper."
+    }
+  ],
+  "expected": "Candidate A should imply the intent and PASS. Candidate B weakens 'no network access' to a localhost exception and should FAIL with a localhost network counterexample. Candidate C weakens 'no privilege escalation' by allowing setuid and should FAIL with a privilege-escalation counterexample. Mechanical order by detected implication failures: A (0), then B and C (1 each)."
+}

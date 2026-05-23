@@ -1,0 +1,7 @@
+{
+  "title": "Privilege-bounded execution sandbox",
+  "stakeholder_intent": "Processes in the sandbox must not be able to escalate privileges. No privilege escalation of any kind is permitted.",
+  "formalized_policy": "The seccomp profile uses a syscall denylist blocking ptrace and clone. CAP_SYS_ADMIN is dropped.",
+  "implementation_claim": "CAP_SYS_ADMIN is unavailable, but setuid binaries are allowed to execute.",
+  "expected_issue": "The intent forbids all privilege escalation. The implementation allows setuid binary execution, a privilege escalation vector not covered by the syscall denylist or the capability drop."
+}
