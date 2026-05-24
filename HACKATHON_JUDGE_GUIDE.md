@@ -45,11 +45,12 @@ python -m specgap.cli examples/06_triangulation_disagreement.json \
 python -m specgap.cli examples/05_candidate_policy_ranking.json \
   --evaluate-candidates --out reports/05_candidate_evaluation_report.md
 
+# Extraction brittleness — vocabulary boundary, not a clean PASS
+python -m specgap.cli examples/04_paraphrased_sandbox.json \
+  --out reports/04_paraphrased_sandbox_report.md
+
 # Tests (real Z3, not mocked)
 pip install -r requirements-dev.txt && pytest -q
-
-# Extraction brittleness (optional): rule mode misses paraphrase; fuzzy is advisory
-python -m specgap.cli examples/04_paraphrased_sandbox.json --extractor rule
 ```
 
 Then skim:
@@ -111,6 +112,7 @@ pip install -r requirements.txt
 python -m specgap.cli examples/sandbox_no_network.json --out reports/demo_report.md
 python -m specgap.cli examples/06_triangulation_disagreement.json --out reports/06_triangulation_disagreement_report.md
 python -m specgap.cli examples/05_candidate_policy_ranking.json --evaluate-candidates --out reports/05_candidate_evaluation_report.md
+python -m specgap.cli examples/04_paraphrased_sandbox.json --out reports/04_paraphrased_sandbox_report.md
 
 pip install -r requirements-dev.txt && pytest -q
 ```
