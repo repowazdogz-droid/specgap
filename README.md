@@ -25,24 +25,17 @@ Automated verification discharges obligations quickly. The bottleneck is whether
 
 ---
 
-## What SpecGap does
+## Architecture
 
-```
-Natural-language spec → extracted constraints → structural divergence analysis
-                                              → Z3 implication checks
-                                              → triangulation (disagreement preserved)
-                                              → replayable evidence artifacts
-```
+SpecGap checks whether downstream policy and implementation layers still logically preserve upstream intent under a declared abstract model, while preserving disagreement between independent evaluators instead of collapsing them into a single verdict.
 
-```mermaid
-flowchart LR
-  A[Stakeholder intent] --> B[Constraint extraction]
-  B --> C[Structural divergence]
-  B --> D[Z3 implication]
-  C --> E[Triangulation]
-  D --> E
-  E --> F[Evidence artifacts]
-```
+<p align="center">
+  <a href="docs/assets/specgap_architecture.svg">
+    <img src="docs/assets/specgap_architecture.png" alt="SpecGap architecture: specification layers flow through extraction and SMT checking to independent evaluators, disagreement preservation, and replayable assurance artifacts" width="680"/>
+  </a>
+</p>
+
+_SVG: [`docs/assets/specgap_architecture.svg`](docs/assets/specgap_architecture.svg)_
 
 1. **Extract** canonical constraints from text (`no_network`, `localhost_only`, …) — rule mode by default.
 2. **Compare** constraint sets across layers (structural specification-divergence signals).

@@ -4,6 +4,10 @@
 
 SpecGap detects **specification divergence** across layered sandbox specs and emits **bounded evidence** — Z3 implication failures and counterexamples in an abstract model — without running sandboxes or claiming security proofs.
 
+![SpecGap architecture](docs/assets/specgap_architecture.png)
+
+_Full diagram: [`docs/assets/specgap_architecture.svg`](docs/assets/specgap_architecture.svg)_
+
 ---
 
 ## 3-minute path

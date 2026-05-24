@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="1300" viewBox="0 0 920 1300" role="img" aria-labelledby="title desc">
+  <title id="title">SpecGap Architecture</title>
+  <desc id="desc">SpecGap preserves semantic integrity across specification layers through constraint extraction, SMT checking, independent evaluators, and disagreement preservation.</desc>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#4a5568"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#9b2c2c"/>
+    </marker>
+    <style>
+      .bg { fill: #fafafa; }
+      .title { font: 600 18px Helvetica, Arial, sans-serif; fill: #1a202c; }
+      .box { fill: #ffffff; stroke: #cbd5e0; stroke-width: 1.2; }
+      .box-head { font: 600 13px Helvetica, Arial, sans-serif; fill: #1a202c; }
+      .box-text { font: 400 11px Helvetica, Arial, sans-serif; fill: #4a5568; }
+      .box-mono { font: 400 10px Menlo, Consolas, monospace; fill: #2d3748; }
+      .label { font: 500 10px Helvetica, Arial, sans-serif; fill: #718096; letter-spacing: 0.04em; }
+      .arrow-line { stroke: #4a5568; stroke-width: 1.2; fill: none; marker-end: url(#arrow); }
+      .arrow-accent { stroke: #9b2c2c; stroke-width: 1.2; fill: none; marker-end: url(#arrow-accent); }
+      .accent-box { fill: #fff5f5; stroke: #9b2c2c; stroke-width: 1.6; }
+      .accent-head { font: 600 13px Helvetica, Arial, sans-serif; fill: #9b2c2c; }
+      .accent-text { font: 400 11px Helvetica, Arial, sans-serif; fill: #742a2a; }
+      .fail { font: 600 10px Menlo, Consolas, monospace; fill: #9b2c2c; }
+      .callout { fill: #f7fafc; stroke: #a0aec0; stroke-width: 1.2; }
+      .callout-title { font: 600 11px Helvetica, Arial, sans-serif; fill: #2d3748; }
+      .callout-text { font: 400 10.5px Helvetica, Arial, sans-serif; fill: #4a5568; }
+      .split-box { fill: #ffffff; stroke: #cbd5e0; stroke-width: 1.2; }
+      .split-title { font: 600 11px Helvetica, Arial, sans-serif; fill: #2d3748; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="920" height="1300"/>
+
+  <text x="460" y="42" text-anchor="middle" class="title">SpecGap - Preserving Semantic Integrity Across Specification Layers</text>
+
+  <rect class="box" x="160" y="72" width="600" height="88" rx="4"/>
+  <text x="180" y="96" class="box-head">Stakeholder Intent</text>
+  <text x="180" y="118" class="box-text">&quot;No external network access&quot;</text>
+  <text x="180" y="136" class="box-text">&quot;Sandboxed execution only&quot;</text>
+
+  <text x="460" y="178" text-anchor="middle" class="label">refinement</text>
+  <line class="arrow-line" x1="460" y1="184" x2="460" y2="204"/>
+
+  <rect class="box" x="160" y="210" width="600" height="88" rx="4"/>
+  <text x="180" y="234" class="box-head">Policy Layer</text>
+  <text x="180" y="256" class="box-mono">allow_internal_io = true</text>
+  <text x="180" y="274" class="box-mono">network_access = false</text>
+
+  <text x="460" y="316" text-anchor="middle" class="label">refinement</text>
+  <line class="arrow-line" x1="460" y1="322" x2="460" y2="342"/>
+
+  <rect class="box" x="160" y="348" width="600" height="96" rx="4"/>
+  <text x="180" y="372" class="box-head">Implementation Claim</text>
+  <text x="180" y="394" class="box-text">Runtime sandbox config</text>
+  <text x="180" y="412" class="box-text">Deployment constraints / enforcement assertions</text>
+
+  <text x="460" y="462" text-anchor="middle" class="label">extraction</text>
+  <line class="arrow-line" x1="460" y1="468" x2="460" y2="488"/>
+
+  <rect class="box" x="160" y="494" width="600" height="96" rx="4"/>
+  <text x="180" y="518" class="box-head">Constraint Extraction</text>
+  <text x="180" y="540" class="box-text">Canonical predicates / rule normalization</text>
+  <text x="180" y="558" class="box-text">Structural divergence detection</text>
+
+  <text x="460" y="608" text-anchor="middle" class="label">analysis</text>
+  <line class="arrow-line" x1="460" y1="614" x2="460" y2="634"/>
+
+  <rect class="box" x="160" y="640" width="600" height="96" rx="4"/>
+  <text x="180" y="664" class="box-head">SMT Implication Checking</text>
+  <text x="180" y="686" class="box-text">Z3 logical implication / abstract sandbox model</text>
+  <text x="180" y="704" class="fail">Counterexample generation (FAIL markers)</text>
+
+  <text x="460" y="754" text-anchor="middle" class="label">parallel evaluators</text>
+  <line class="arrow-line" x1="460" y1="760" x2="460" y2="780"/>
+
+  <rect class="split-box" x="120" y="786" width="680" height="148" rx="4"/>
+  <text x="140" y="810" class="box-head">Independent Mechanisms</text>
+
+  <rect class="split-box" x="140" y="824" width="300" height="92" rx="3"/>
+  <text x="156" y="846" class="split-title">Structural comparison</text>
+  <text x="156" y="866" class="box-text">WEAKER_OF lattice</text>
+  <text x="156" y="884" class="box-text">Name-level weakening</text>
+
+  <rect class="split-box" x="480" y="824" width="300" height="92" rx="3"/>
+  <text x="496" y="846" class="split-title">Logical implication checks</text>
+  <text x="496" y="866" class="box-text">Z3 over abstract model</text>
+  <text x="496" y="884" class="fail">Implication FAIL + counterexample</text>
+
+  <text x="460" y="948" text-anchor="middle" class="box-text">Candidate policy evaluation (optional ranking)</text>
+
+  <text x="460" y="978" text-anchor="middle" class="label">preservation</text>
+  <line class="arrow-accent" x1="460" y1="984" x2="460" y2="1004"/>
+
+  <rect class="accent-box" x="160" y="1010" width="600" height="88" rx="4"/>
+  <text x="180" y="1034" class="accent-head">Disagreement Preservation</text>
+  <text x="180" y="1056" class="accent-text">Mechanisms disagree - both signals retained</text>
+  <text x="180" y="1074" class="accent-text">NOT: single confidence score or merged verdict</text>
+
+  <line class="arrow-line" x1="460" y1="1104" x2="460" y2="1124"/>
+
+  <rect class="box" x="160" y="1128" width="600" height="96" rx="4"/>
+  <text x="180" y="1152" class="box-head">Replayable Assurance Artifact</text>
+  <text x="180" y="1172" class="box-text">Markdown report / JSON evidence / counterexamples</text>
+  <text x="180" y="1190" class="box-text">Assumption boundaries / failed implications</text>
+
+  <rect class="callout" x="120" y="1236" width="680" height="52" rx="3"/>
+  <text x="136" y="1256" class="callout-title">Important:</text>
+  <text x="136" y="1274" class="callout-text">SpecGap does NOT prove runtime system security.</text>
+  <text x="136" y="1290" class="callout-text">It checks whether downstream layers preserve upstream intent under a declared abstract model.</text>
+</svg>

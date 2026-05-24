@@ -65,3 +65,5 @@ Within ~10 minutes, a judge should see:
 4. Clear assurance boundary: bounded evidence generation, not sandbox verification or security proof
 
 **Judge guide:** [`HACKATHON_JUDGE_GUIDE.md`](../HACKATHON_JUDGE_GUIDE.md)
+
+**Architecture diagram:** [`docs/assets/specgap_architecture.svg`](../docs/assets/specgap_architecture.svg)
