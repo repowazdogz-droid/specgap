@@ -32,6 +32,7 @@ _Structural diff and Z3 implication outcomes **agree** for all layers checked â€
 - **Stakeholder Intent:** The sandbox must have no network access. Code running inside it cannot reach the internet or any host.
 - **Formalized Policy:** Network egress is restricted: localhost connections are allowed for the local metrics collector.
 - **Implementation Claim:** The runtime blocks all external network destinations; only loopback (localhost) traffic is permitted.
+
 ## Human Annotation (outside tool evaluation)
 
 > **HUMAN NOTE**

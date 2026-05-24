@@ -32,6 +32,7 @@ _At least one layer shows **disagreement** between structural diff and Z3. Treat
 - **Stakeholder Intent:** The root filesystem is read-only per container policy.
 - **Formalized Policy:** Write access to /var is allowed for application logs and runtime state.
 - **Implementation Claim:** Write access to /var is allowed for application logs and runtime state.
+
 ## Human Annotation (outside tool evaluation)
 
 > **HUMAN NOTE**
