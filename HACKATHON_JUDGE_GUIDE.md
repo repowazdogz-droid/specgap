@@ -2,7 +2,9 @@
 
 **Repo:** https://github.com/repowazdogz-droid/specgap
 
-SpecGap detects **specification divergence** across layered sandbox specs and emits **bounded evidence** — Z3 implication failures and counterexamples in an abstract model — without running sandboxes or claiming security proofs.
+SpecGap checks whether downstream policy and implementation layers still logically preserve upstream intent under a declared abstract model, while preserving disagreement between independent evaluators instead of collapsing them into a single verdict.
+
+It detects **specification divergence** across layered sandbox specs and emits **bounded evidence** — Z3 implication failures and counterexamples in an abstract model — without running sandboxes or claiming security proofs.
 
 ![SpecGap architecture](docs/assets/specgap_architecture.png)
 
@@ -24,7 +26,7 @@ Open `reports/demo_report.md`. Look for:
 
 1. **Extracted constraints** — intent says `no_network`, policy says `localhost_only`
 2. **Z3 implication FAILS** — downstream permits behavior upstream forbids
-3. **Counterexample** — `network_send=true, dest_localhost=true`
+3. **Counterexample** — `network_send=true, dest_localhost=true` (abstract model only; not a runtime exploit proof)
 
 **Takeaway:** Each layer reads fine alone; together they quietly redefine the proof obligation.
 
@@ -45,6 +47,9 @@ python -m specgap.cli examples/05_candidate_policy_ranking.json \
 
 # Tests (real Z3, not mocked)
 pip install -r requirements-dev.txt && pytest -q
+
+# Extraction brittleness (optional): rule mode misses paraphrase; fuzzy is advisory
+python -m specgap.cli examples/04_paraphrased_sandbox.json --extractor rule
 ```
 
 Then skim:

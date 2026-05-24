@@ -3,7 +3,9 @@
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 ![pytest](https://img.shields.io/badge/tests-pytest-41%20passed-brightgreen)
 
-SpecGap detects **specification divergence** across layered sandbox specs — intent, policy, and implementation claims — and emits **bounded evidence**: Z3 implication failures and **counterexamples in the abstract model**, with structural/Z3 disagreement preserved when the independent checks diverge.
+SpecGap checks whether downstream policy and implementation layers still logically preserve upstream intent under a declared abstract model, while preserving disagreement between independent evaluators instead of collapsing them into a single verdict.
+
+It detects **specification divergence** across layered sandbox specs and emits **bounded evidence**: Z3 implication failures and **counterexamples in the abstract model**, with structural/Z3 disagreement preserved when independent checks diverge.
 
 **Judge path:** [HACKATHON_JUDGE_GUIDE.md](HACKATHON_JUDGE_GUIDE.md) · **10-minute run:** [below](#10-minute-evaluator-path)
 
@@ -88,6 +90,8 @@ Counterexample behavior:
 - `network_send = true` — a network connection is opened
 - `dest_localhost = true` — the connection destination is localhost / loopback
 ```
+
+_Counterexamples are behaviors in the declared abstract model — not confirmed runtime exploits._
 
 Triangulation can also **disagree** — structural diff silent while Z3 fails (see `examples/06_triangulation_disagreement.json`):
 
@@ -201,7 +205,9 @@ specgap/
 
 ## Limitations
 
-- Rule extraction uses a fixed vocabulary; unrecognized phrasing is not extracted.
+- Rule extraction uses a fixed vocabulary; unrecognized phrasing is not extracted (`examples/04_paraphrased_sandbox.json` shows the extraction-failure guard).
 - Fuzzy mode is opt-in; extracted fuzzy constraints require human review.
 - Z3 model is propositional abstraction — counterexamples are illustrative, not exploit proofs.
 - Three fixed layers (or N candidates); no multi-document specs or version history.
+
+**Why not LLM evals?** Deterministic rule extraction, replayable Z3 checks, and disagreement preserved across independent mechanisms — not a single model verdict.

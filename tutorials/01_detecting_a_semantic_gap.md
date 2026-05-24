@@ -2,10 +2,9 @@
 
 This tutorial walks through the core SpecGap workflow: three specification layers, constraint extraction, and Z3 implication checking over an abstract sandbox model.
 
-**Prerequisites:** Python 3.10+. From the Omega repository root:
+**Prerequisites:** Python 3.10+. From the repository root:
 
 ```bash
-cd specgap
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```

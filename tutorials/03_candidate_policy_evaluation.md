@@ -47,7 +47,6 @@ File: `examples/05_candidate_policy_ranking.json`
 ## Step 1 — Run candidate evaluation
 
 ```bash
-cd specgap
 python -m specgap.cli examples/05_candidate_policy_ranking.json --evaluate-candidates --out reports/03_candidate_report.md
 ```
 

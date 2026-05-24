@@ -34,7 +34,6 @@ The divergence is the same as Tutorial 1 *once* the intent is recognized as `no_
 ## Step 1 — Rule extraction (vocabulary-bound)
 
 ```bash
-cd specgap
 python -m specgap.cli examples/04_paraphrased_sandbox.json --extractor rule --out reports/02_rule_report.md
 ```
 

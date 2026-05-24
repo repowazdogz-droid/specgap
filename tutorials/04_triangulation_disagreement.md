@@ -2,10 +2,9 @@
 
 This tutorial demonstrates **triangulation disagreement**: the structural weakening lattice reports no divergence, but Z3 finds an implication failure. That is intentional — the two mechanisms operate over different abstractions.
 
-**Prerequisites:** Tutorials [1](01_detecting_a_semantic_gap.md) and the triangulation section in any recent report. From the Omega repository root:
+**Prerequisites:** Tutorials [1](01_detecting_a_semantic_gap.md) and the triangulation section in any recent report. From the repository root:
 
 ```bash
-cd specgap
 source .venv/bin/activate   # if using a venv
 ```
 

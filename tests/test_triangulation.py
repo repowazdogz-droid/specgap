@@ -103,7 +103,7 @@ def test_triangulation_to_dict_shape():
 
 
 def test_example_06_triangulation_disagreement():
-    """Example 06: structural silent, Z3 fails — proves triangulation is not decorative."""
+    """Example 06: structural silent, Z3 fails — demonstrates triangulation is not decorative."""
     analysis = analyze(_load("06_triangulation_disagreement.json"))
     summary = triangulate_analysis(analysis.diff_result, analysis.implications)
 
