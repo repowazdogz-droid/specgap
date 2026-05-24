@@ -5,17 +5,21 @@
 
 SpecGap checks whether downstream policy and implementation layers still logically preserve upstream intent under a declared abstract model, while preserving disagreement between independent evaluators instead of collapsing them into a single verdict.
 
-It detects **specification divergence** across layered sandbox specs and emits **bounded evidence**: Z3 implication failures and **counterexamples in the abstract model**, with structural/Z3 disagreement preserved when independent checks diverge.
+Layered sandbox specifications drift: intent, formalized policy, and implementation claims each read plausibly alone. SpecGap extracts constrained obligations, runs **structural divergence** analysis and **Z3 implication checks**, and emits **replayable Markdown/JSON evidence** — implication failures and counterexamples inside the model when logical preservation fails.
 
-**Judge path:** [HACKATHON_JUDGE_GUIDE.md](HACKATHON_JUDGE_GUIDE.md) · **10-minute run:** [below](#10-minute-evaluator-path)
+**Start here:** [3-minute path](#3-minute-evaluator-path) · [Judge guide](HACKATHON_JUDGE_GUIDE.md)
 
 ---
 
 ## The problem
 
-Stakeholder intent drifts as specs pass through policy and implementation. Each layer reads fine in isolation; together they may permit behavior the stakeholder believed was forbidden.
+**Specification assurance** breaks when semantic drift accumulates across layers. Automated checks discharge obligations quickly; the bottleneck is whether downstream policy still matches upstream intent.
 
-**Aha example**
+Stakeholder language becomes predicates, then runtime claims. Each refinement can weaken constraints without anyone noticing until behavior is already permitted.
+
+---
+
+## The aha example
 
 | Layer | Text |
 | --- | --- |
@@ -23,191 +27,163 @@ Stakeholder intent drifts as specs pass through policy and implementation. Each 
 | **Policy** | “Only localhost access” |
 | **Result** | **FAIL** — downstream permits `network_send=true, dest_localhost=true`, which violates upstream `no_network`. |
 
-Automated verification discharges obligations quickly. The bottleneck is whether the obligation still matches what stakeholders meant. SpecGap checks alignment **before** deployment or runtime evaluation — it does not run sandboxes or observe live behavior.
+SpecGap surfaces this **before** deployment or adversarial evaluation. It does not run sandboxes or observe live infrastructure.
 
 ---
 
 ## Architecture
 
-SpecGap checks whether downstream policy and implementation layers still logically preserve upstream intent under a declared abstract model, while preserving disagreement between independent evaluators instead of collapsing them into a single verdict.
-
 <p align="center">
   <a href="docs/assets/specgap_architecture.svg">
-    <img src="docs/assets/specgap_architecture.png" alt="SpecGap architecture: specification layers flow through extraction and SMT checking to independent evaluators, disagreement preservation, and replayable assurance artifacts" width="680"/>
+    <img src="docs/assets/specgap_architecture.png" alt="SpecGap architecture: intent and policy layers through extraction, SMT checking, independent evaluators, disagreement preservation, and replayable evidence artifacts" width="680"/>
   </a>
 </p>
 
 _SVG: [`docs/assets/specgap_architecture.svg`](docs/assets/specgap_architecture.svg)_
 
-1. **Extract** canonical constraints from text (`no_network`, `localhost_only`, …) — rule mode by default.
-2. **Compare** constraint sets across layers (structural specification-divergence signals).
-3. **Check** with Z3 whether downstream layers imply upstream intent over the abstract sandbox model.
-4. **Triangulate** structural diff vs Z3 per layer — [disagreement is preserved](docs/WHY_DISAGREEMENT_MATTERS.md), not collapsed.
-5. **Report** implication failures and counterexample behaviors as replayable Markdown/JSON.
+---
 
-Optional: candidate evaluation (`--evaluate-candidates`), BoxArena pre-flight ([docs/BOXARENA_POSITIONING.md](docs/BOXARENA_POSITIONING.md)), MCP wrapper ([specgap-mcp/](specgap-mcp/README.md)).
+## What SpecGap does
+
+1. **Extract** canonical constraints from text (`no_network`, `localhost_only`, …) — deterministic rule mode by default.
+2. **Compare** layers with a structural weakening lattice (`STRICT` / `WEAKER_OF`).
+3. **Check** with Z3 whether downstream layers imply upstream intent over the declared abstract sandbox model.
+4. **Triangulate** structural diff vs Z3 per layer — disagreement is preserved, not merged into one score.
+5. **Report** implication failures, counterexample atoms, and assumption boundaries as replayable artifacts.
+
+Optional integrations (same trust boundary): candidate evaluation (`--evaluate-candidates`), MCP wrapper ([`specgap-mcp/`](specgap-mcp/README.md)), pre-runtime evidence export ([`docs/BOXARENA_POSITIONING.md`](docs/BOXARENA_POSITIONING.md)).
+
+---
+
+## 3-minute evaluator path
+
+```bash
+git clone https://github.com/repowazdogz-droid/specgap.git
+cd specgap
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python -m specgap.cli examples/sandbox_no_network.json --out reports/demo_report.md
+```
+
+**Inspect:** [`reports/demo_report.md`](reports/demo_report.md)
+
+| Section | What to look for |
+| --- | --- |
+| Extracted constraints | Intent `no_network` vs policy `localhost_only` |
+| Z3 Formal Check | **Implication FAILS** — downstream permits behavior upstream forbids |
+| Counterexample | `network_send=true, dest_localhost=true` *(abstract model only)* |
+
+**Deeper walkthrough:** [`HACKATHON_JUDGE_GUIDE.md`](HACKATHON_JUDGE_GUIDE.md)
 
 ---
 
 ## 10-minute evaluator path
 
+After the [3-minute setup](#3-minute-evaluator-path):
+
 ```bash
-git clone https://github.com/repowazdogz-droid/specgap.git
-cd specgap
-python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-
-# Headline divergence (network drift)
-python -m specgap.cli examples/sandbox_no_network.json --out reports/demo_report.md
-
-# Triangulation disagreement (structural silent, Z3 fails)
 python -m specgap.cli examples/06_triangulation_disagreement.json --out reports/06_triangulation_disagreement_report.md
-
-# Candidate ranking
 python -m specgap.cli examples/05_candidate_policy_ranking.json --evaluate-candidates --out reports/05_candidate_evaluation_report.md
-
+python -m specgap.cli examples/04_paraphrased_sandbox.json --out reports/04_paraphrased_sandbox_report.md
 pip install -r requirements-dev.txt && pytest -q
 ```
 
-Open `reports/demo_report.md` — see **Z3 Formal Check** and **Counterexample** sections.
-
-**Requires:** Python 3.10+, [Z3](https://github.com/Z3Prover/z3) via `z3-solver`.
-
----
-
-## Example output
-
-From `reports/demo_report.md` (regenerate with the command above):
-
-```markdown
-### Formalized Policy ⇒ Stakeholder Intent
-
-- **Result: implication FAILS.** Z3 returned `sat` for the negation: there is a behavior
-  permitted by Formalized Policy that Stakeholder Intent forbids.
-- Violated target constraint(s): `no_network`
-
-Counterexample behavior:
-- `network_send = true` — a network connection is opened
-- `dest_localhost = true` — the connection destination is localhost / loopback
-```
-
-_Counterexamples are behaviors in the declared abstract model — not confirmed runtime exploits._
-
-Triangulation can also **disagree** — structural diff silent while Z3 fails (see `examples/06_triangulation_disagreement.json`):
-
-```markdown
-| Layer              | Structural              | Z3 implication | Agreement |
-| Formalized Policy  | no_divergence_detected  | fails          | **no**    |
-```
-
-Full reference reports: [`reports/demo_report.md`](reports/demo_report.md), [`reports/06_triangulation_disagreement_report.md`](reports/06_triangulation_disagreement_report.md).
+| Example | What it shows |
+| --- | --- |
+| `06_triangulation_disagreement.json` | Structural diff silent, Z3 fails — **disagreement preserved** |
+| `05_candidate_policy_ranking.json` | Candidate A PASS, B/C FAIL — policy comparison, not a security score |
+| `04_paraphrased_sandbox.json` | Extraction failure on paraphrase — vocabulary boundary, not a clean PASS |
 
 ---
 
-## Why disagreement is preserved
+## Example map
+
+| File | Research contribution |
+| --- | --- |
+| [`examples/sandbox_no_network.json`](examples/sandbox_no_network.json) | Basic semantic weakening + Z3 implication failure |
+| [`examples/04_paraphrased_sandbox.json`](examples/04_paraphrased_sandbox.json) | Extraction-boundary / paraphrase brittleness guard |
+| [`examples/05_candidate_policy_ranking.json`](examples/05_candidate_policy_ranking.json) | Candidate policy comparison vs one intent |
+| [`examples/06_triangulation_disagreement.json`](examples/06_triangulation_disagreement.json) | Disagreement preservation across independent mechanisms |
+
+**Additional examples:** [`sandbox_readonly_fs.json`](examples/sandbox_readonly_fs.json), [`syscall_policy_mismatch.json`](examples/syscall_policy_mismatch.json), [`boxarena_preflight_*.json`](examples/) — same pipeline, different constraint domains.
+
+**Tutorials:** [`tutorials/README.md`](tutorials/README.md) (step-by-step walkthroughs for each row above).
+
+---
+
+## Why disagreement matters
 
 Structural diff and Z3 operate **independently** over extracted constraints:
 
-- **Structural diff** — name-level weakening lattice (`STRICT` / `WEAKER_OF`)
+- **Structural diff** — name-level weakening lattice
 - **Z3** — propositional abstract sandbox model
 
-When they diverge, SpecGap surfaces both signals rather than forcing one verdict. Disagreement may indicate a lattice gap, encoding incompleteness, or abstraction mismatch — not that one mechanism is wrong.
+When they diverge, SpecGap reports both signals. Collapsing to one verdict would hide lattice gaps, encoding incompleteness, or abstraction mismatch. That preservation is the core research contribution.
 
-→ Full treatment: [`docs/WHY_DISAGREEMENT_MATTERS.md`](docs/WHY_DISAGREEMENT_MATTERS.md)
-
----
-
-## Scope and assurance boundary
-
-**SpecGap does:**
-
-- Detect specification divergence over extracted constraints
-- Emit bounded evidence (implication failures, counterexamples in the abstract model)
-- Preserve heterogeneous signals from independent check mechanisms
-
-**SpecGap does NOT:**
-
-- Prove semantic correctness, security, or that intent was right
-- Verify sandboxes, run containers, or observe runtime behavior
-- Model real kernels, seccomp, or container runtimes
-- Certify fuzzy extraction (advisory; requires human review)
-- Generate or repair policies
-
-A clean report means **no divergence detected under current extraction and model** — nothing stronger.
-
-| Document | Contents |
-| --- | --- |
-| [`docs/SPECIFICATION.md`](docs/SPECIFICATION.md) | Correctness target, scope, implication direction, replayability |
-| [`docs/ASSURANCE_BOUNDARY.md`](docs/ASSURANCE_BOUNDARY.md) | Assurance boundary, attack surfaces, inside/outside scope |
-| [`docs/TCB.md`](docs/TCB.md) | Trusted computing base and abstraction limits |
-| [`docs/ENCODING.md`](docs/ENCODING.md) | Behavior atoms, constraint formulas, known vacuities |
+→ [`docs/WHY_DISAGREEMENT_MATTERS.md`](docs/WHY_DISAGREEMENT_MATTERS.md)
 
 ---
 
-## Tutorials
+## What SpecGap does NOT claim
 
-| Tutorial | Topic |
+SpecGap does **NOT**:
+
+- prove runtime security
+- verify infrastructure or execute sandboxes
+- replace adversarial evaluation
+- guarantee extraction completeness
+- turn **PASS** into “secure”
+
+| Outcome | Meaning |
 | --- | --- |
-| [tutorials/01_detecting_a_semantic_gap.md](tutorials/01_detecting_a_semantic_gap.md) | Intent/policy/implementation, Z3 implication failure |
-| [tutorials/02_rule_vs_fuzzy_extraction.md](tutorials/02_rule_vs_fuzzy_extraction.md) | Vocabulary-bound rules, extraction-failure guard, fuzzy recovery |
-| [tutorials/03_candidate_policy_evaluation.md](tutorials/03_candidate_policy_evaluation.md) | Candidate evaluation, implementation discrimination |
-| [tutorials/04_triangulation_disagreement.md](tutorials/04_triangulation_disagreement.md) | Structural vs Z3 disagreement (triangulation) |
+| **PASS** | No divergence found under the current extraction rules and declared abstract model. |
+| **FAIL** | Logical preservation failed inside the abstract model — often with a counterexample. |
 
-See [tutorials/README.md](tutorials/README.md) for 10- and 30-minute reading paths.
+Counterexamples are illustrative behaviors in the model, not confirmed exploits. A clean report is bounded specification assurance, not semantic approval of stakeholder intent.
 
-## Examples
+**Assurance docs:** [`docs/SPECIFICATION.md`](docs/SPECIFICATION.md) · [`docs/ASSURANCE_BOUNDARY.md`](docs/ASSURANCE_BOUNDARY.md) · [`docs/TCB.md`](docs/TCB.md) · [`docs/ENCODING.md`](docs/ENCODING.md)
 
-| File | Divergence |
-| --- | --- |
-| `examples/sandbox_no_network.json` | `no_network` vs `localhost_only` |
-| `examples/sandbox_readonly_fs.json` | read-only intent vs writable `/tmp` |
-| `examples/syscall_policy_mismatch.json` | no privesc vs setuid allowed |
-| `examples/04_paraphrased_sandbox.json` | "air-gapped" paraphrase (rule fails, fuzzy recovers) |
-| `examples/05_candidate_policy_ranking.json` | Three candidates vs one intent (A: no implication failure) |
-| `examples/06_triangulation_disagreement.json` | Structural silent, Z3 fails — triangulation disagreement |
-| `examples/boxarena_preflight_divergence.json` | BoxArena pre-flight fail (network spec drift) |
-| `examples/boxarena_preflight_pass.json` | BoxArena pre-flight pass (aligned read-only spec) |
+---
 
-## Docs and submission
+## Repository map
 
-| Resource | Purpose |
-| --- | --- |
-| [HACKATHON_JUDGE_GUIDE.md](HACKATHON_JUDGE_GUIDE.md) | 3- and 10-minute judge paths |
-| [submission/HACKATHON_SUMMARY.md](submission/HACKATHON_SUMMARY.md) | Track fit, novelty, demo commands |
-| [docs/WHY_DISAGREEMENT_MATTERS.md](docs/WHY_DISAGREEMENT_MATTERS.md) | Core research contribution |
-| [docs/BOXARENA_POSITIONING.md](docs/BOXARENA_POSITIONING.md) | Pre-flight → runtime evaluation workflow |
+```
+specgap/                 CLI package — extractor, semantic_diff, z3_checker, triangulation, reporter
+specgap-mcp/             stdio MCP wrapper (analyze_spec, evaluate_candidates, boxarena_preflight)
+examples/                Input JSON specs (tracked)
+reports/                 Reference reports (regenerate via CLI)
+tests/                   pytest suite — Z3 checks not mocked
+docs/                    Specification, assurance boundary, encoding, architecture assets
+tutorials/               Verified walkthroughs
+submission/              Hackathon summary and freeze record
+.github/workflows/       CI — pytest on push
+```
 
-## Replayability
+---
 
-- **Deterministic CLI** — same JSON input and `--extractor rule` yield the same extraction and Z3 results
-- **Reproducible examples** — `examples/*.json` tracked in the repository
-- **Reference reports** — whitelisted under `reports/` (regenerate via CLI)
-- **pytest** — 41 tests; Z3 implication checks are not mocked
+## Development / tests
+
+**Requires:** Python 3.10+, [Z3](https://github.com/Z3Prover/z3) via `z3-solver`.
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+pytest -q
+```
+
+- **Deterministic CLI** — same JSON + `--extractor rule` → same extraction and Z3 results
+- **41 tests** — real Z3 implication checks, not mocked
+- **CI** — `.github/workflows/test.yml` runs `pytest -q` on `main`
 
 Record input path, extractor mode, Python version, and `z3-solver` version when citing results.
 
-## Project structure
+---
 
-```
-specgap/
-├── specgap/           # Python package (cli, extractor, z3_checker, reporter, …)
-│   └── integrations/  # boxarena_adapter.py — pre-runtime bridge (not runtime eval)
-├── specgap-mcp/       # Local stdio MCP wrapper
-├── docs/              # Specification, assurance boundary, TCB, encoding
-├── examples/          # Input JSON specs
-├── tutorials/         # Research onboarding walkthroughs
-├── reports/           # Reference Markdown reports (regenerate via CLI)
-├── tests/             # pytest suite
-├── submission/        # Hackathon summary and validation record
-├── requirements.txt
-└── pyproject.toml
-```
+## Submission links
 
-## Limitations
-
-- Rule extraction uses a fixed vocabulary; unrecognized phrasing is not extracted (`examples/04_paraphrased_sandbox.json` shows the extraction-failure guard).
-- Fuzzy mode is opt-in; extracted fuzzy constraints require human review.
-- Z3 model is propositional abstraction — counterexamples are illustrative, not exploit proofs.
-- Three fixed layers (or N candidates); no multi-document specs or version history.
-
-**Why not LLM evals?** Deterministic rule extraction, replayable Z3 checks, and disagreement preserved across independent mechanisms — not a single model verdict.
+| Document | Purpose |
+| --- | --- |
+| [`HACKATHON_JUDGE_GUIDE.md`](HACKATHON_JUDGE_GUIDE.md) | 3- and 10-minute judge paths, copy-paste commands |
+| [`submission/HACKATHON_SUMMARY.md`](submission/HACKATHON_SUMMARY.md) | Track fit, novelty, limitations |
+| [`submission/SUBMISSION_FREEZE.md`](submission/SUBMISSION_FREEZE.md) | Verified commands and freeze record |
+| [`docs/WHY_DISAGREEMENT_MATTERS.md`](docs/WHY_DISAGREEMENT_MATTERS.md) | Research contribution (one page) |
