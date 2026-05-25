@@ -1,64 +1,102 @@
-# Why Disagreement Matters
+# Why disagreement matters
 
-SpecGap's core research contribution is not a single verdict engine. It is **heterogeneous evidence preservation** across independent check mechanisms that operate at different abstraction levels over extracted sandbox constraints.
+Short essay on SpecGap's epistemic design. Technical companion: [`ASSURANCE_BOUNDARY.md`](ASSURANCE_BOUNDARY.md), [`THREAT_MODEL_SUMMARY.md`](THREAT_MODEL_SUMMARY.md).
 
 ---
 
-## Two independent mechanisms
+## The problem with one verdict
 
-| Mechanism | What it checks | Abstraction level |
+Most specification tools optimize for a **single authoritative answer**: PASS or FAIL, green or red, safe or unsafe. That is convenient for dashboards. It is dangerous for assurance.
+
+Independent check mechanisms operate at **different abstractions**. When they agree, you learn that two bounded views align **inside a declared model**. When they disagree, you learn that **your model stack is incomplete or misaligned** — often more valuable than another green check.
+
+Collapsing heterogeneous signals into consensus is **confidence theater**: it looks like certainty without adding inspectable evidence.
+
+---
+
+## Preserving contradiction
+
+SpecGap runs two mechanisms on the same extracted constraints:
+
+| Mechanism | Abstraction | Question |
 | --- | --- | --- |
-| **Structural diff** | Whether downstream constraint names weaken upstream strict constraints via the hand-authored `WEAKER_OF` lattice | Name-level partial order |
-| **Z3 implication** | Whether downstream constraint formulas imply upstream formulas in the propositional abstract sandbox model | Behavior-atom satisfiability |
+| **Structural diff** | Constraint names + weakening lattice | Did downstream names weaken upstream strict constraints? |
+| **Z3 implication** | Propositional formulas over behavior atoms | Does downstream permit a behavior intent forbids in the model? |
 
-Both consume the same extracted constraint sets. Neither delegates to the other. Outcomes can **agree** or **disagree**.
+Outcomes can **contradict**. Example: [`examples/06_triangulation_disagreement.json`](../examples/06_triangulation_disagreement.json) — structural diff reports no divergence; Z3 reports implication failure with a counterexample.
 
----
+SpecGap **preserves the contradiction** in the report. It does not pick a winner, average scores, or hide the losing mechanism.
 
-## Agreement is not a merged verdict
+**Why:** A contradiction often means:
 
-When structural diff and Z3 agree (e.g. `examples/sandbox_no_network.json`), both mechanisms independently detect that downstream layers permit behavior inconsistent with upstream intent. Agreement is **confirmation within the trusted computing base (TCB)** — not proof of security, correctness, or runtime behavior.
+- The lattice does not encode a weakening Z3 sees (lattice gap)
+- The encoding represents behavior the structural layer does not name (encoding gap)
+- The two mechanisms answer related but non-identical questions (abstraction mismatch)
 
-See [`TCB.md`](TCB.md) and [`ASSURANCE_BOUNDARY.md`](ASSURANCE_BOUNDARY.md) for scope limits.
-
----
-
-## Disagreement is signal, not noise
-
-When the mechanisms diverge (e.g. `examples/06_triangulation_disagreement.json`), structural diff reports **no divergence detected** while Z3 reports **implication fails** with a concrete counterexample.
-
-SpecGap **preserves this disagreement** rather than forcing a single PASS/FAIL. Possible interpretations:
-
-1. **Lattice gap** — the `WEAKER_OF` relation does not encode the weakening the Z3 model captures (e.g. `readonly_root_fs` is partial, not in the strict lattice path structural diff expects).
-2. **Encoding incompleteness** — the abstract model represents a property the structural layer does not name.
-3. **Abstraction mismatch** — the two mechanisms answer related but non-identical questions over the same text.
-
-Collapsing to one verdict would hide which mechanism fired and why. For specification assurance, that loss is worse than reporting heterogeneous evidence.
+Any of these is actionable for a spec author. A forced single verdict would destroy the diagnostic.
 
 ---
 
-## Why not pick a winner?
+## Triangulation over consensus
 
-- **Structural diff** is fast, auditable, and tied to human-readable constraint names — but bounded by the hand-authored lattice.
-- **Z3** catches propositional implication failures the lattice may miss — but bounded by the abstract model in [`ENCODING.md`](ENCODING.md).
+**Triangulation** here means: report each mechanism's outcome, an agreement flag, and counterexamples when SMT fails — **without merging into one confidence number**.
 
-Neither subsumes the other. SpecGap triangulates: per layer, report structural outcome, Z3 outcome, agreement flag, and counterexample when Z3 fails.
+Triangulation is **not**:
 
-This is **bounded assurance reporting**, not statistical consensus, voting, or cross-validation.
+- Voting between mechanisms
+- Cross-validation that doubles certainty
+- Proof that disagreement implies runtime vulnerability
+- An excuse to ignore structural results when Z3 passes
+
+Triangulation **is**:
+
+- Legible heterogeneous evidence
+- A prompt for reviewers to ask *which abstraction failed*
+- Operational hygiene for layered specs where no single view is complete
+
+When **Agreement = yes** on a failure, both mechanisms saw a problem — stronger **within TCB**, still not a runtime proof.
+
+When **Agreement = no**, slow down. That row is often the contribution.
+
+---
+
+## Operational danger of premature convergence
+
+Premature convergence happens when teams:
+
+- Ship because "the spec checker passed"
+- Treat a clean adversarial run as proof the **written** policy was faithful
+- Merge structural, SMT, lint, and human review into one KPI
+- Hide extraction failures behind a green aggregate score
+
+In production assurance, premature convergence produces **false negatives at review time**: the organization believes alignment was checked when only a **slice** of the spec entered the model.
+
+SpecGap's design choice is conservative: **fail visible** on extraction emptiness, **report separate** mechanism rows, and **never** upgrade "no violation in model" to "spec is correct."
+
+---
+
+## Assurance evidence vs confidence theater
+
+| Assurance evidence | Confidence theater |
+| --- | --- |
+| Named constraints extracted | Opaque "all good" |
+| Counterexample assignments | Generic risk scores |
+| Disagreement rows preserved | Single blended grade |
+| Regenerable CLI artifacts | Screenshot of a dashboard |
+| Explicit TCB and omissions | "AI-verified safe" |
+
+Evidence should let a reviewer answer: **what was checked, under what assumptions, and what was left out?** If those questions cannot be answered from the artifact, the tool is performing theater.
 
 ---
 
 ## Research-engineering takeaway
 
-Most spec-checking tools optimize for a single authoritative answer. SpecGap optimizes for **replayable evidence artifacts** that preserve when independent abstractions diverge.
+SpecGap optimizes for **replayable evidence artifacts** that preserve when independent abstractions diverge — not for maximizing pass rates.
 
-For judges and reviewers: look for triangulation rows where **Agreement = no**. That is where the tool adds information a single-mechanism checker would miss — without claiming the disagreement itself proves a runtime vulnerability.
+For collaborators: extend vocabulary, lattice, and encoding with **fixtures that keep disagreement examples stable**. For reviewers: treat triangulation **Agreement = no** as signal, not tool error.
 
----
+Further reading:
 
-## Further reading
-
-- [`SPECIFICATION.md`](SPECIFICATION.md) — implication direction and correctness target
-- [`ENCODING.md`](ENCODING.md) — behavior atoms and known vacuities
-- [`tutorials/04_triangulation_disagreement.md`](../tutorials/04_triangulation_disagreement.md) — worked example with commands
-- [`HACKATHON_JUDGE_GUIDE.md`](../HACKATHON_JUDGE_GUIDE.md) — judge evaluation path
+- [`tutorials/04_triangulation_disagreement.md`](../tutorials/04_triangulation_disagreement.md) — worked example
+- [`SPECIFICATION.md`](SPECIFICATION.md) — implication direction
+- [`RESEARCH_DIRECTIONS.md`](RESEARCH_DIRECTIONS.md) — open falsifiable questions
