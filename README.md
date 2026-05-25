@@ -1,5 +1,11 @@
 # SpecGap
 
+**Layer:** Assurance
+
+## Position in OMEGA Lab
+
+Pre-runtime specification divergence evidence. Does not replace runtime evaluation. See [docs/ASSURANCE_BOUNDARY.md](docs/ASSURANCE_BOUNDARY.md). Stack map: [omega-contracts TRUST_STACK](https://github.com/repowazdogz-droid/omega-contracts/blob/main/docs/TRUST_STACK.md).
+
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 ![pytest](https://img.shields.io/badge/tests-pytest-41%20passed-brightgreen)
 [![test](https://github.com/repowazdogz-droid/specgap/actions/workflows/test.yml/badge.svg)](https://github.com/repowazdogz-droid/specgap/actions/workflows/test.yml)
