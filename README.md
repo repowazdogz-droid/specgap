@@ -184,6 +184,8 @@ Counterexamples are illustrative model behaviors, not confirmed exploits.
 
 **Assurance docs:** [`docs/SPECIFICATION.md`](docs/SPECIFICATION.md) · [`docs/ASSURANCE_BOUNDARY.md`](docs/ASSURANCE_BOUNDARY.md) · [`docs/TCB.md`](docs/TCB.md) · [`docs/ENCODING.md`](docs/ENCODING.md)
 
+**Research framing:** [`docs/SPECGAP_POSITIONING.md`](docs/SPECGAP_POSITIONING.md) · [`docs/RESEARCH_DIRECTIONS.md`](docs/RESEARCH_DIRECTIONS.md) · [`docs/THREAT_MODEL_SUMMARY.md`](docs/THREAT_MODEL_SUMMARY.md) · [`docs/WHY_DISAGREEMENT_MATTERS.md`](docs/WHY_DISAGREEMENT_MATTERS.md)
+
 ---
 
 ## Rigor signals
