@@ -1,0 +1,7 @@
+{
+  "title": "Multi-agent escalation divergence — planner readonly vs executor write scope",
+  "stakeholder_intent": "Planner agent policy: the root filesystem is read-only per container policy. Executor agents must not broaden write scope without human review.",
+  "formalized_policy": "Executor agent: Write access to /var is allowed for application logs and runtime state.",
+  "implementation_claim": "Executor agent: Write access to /var is allowed for application logs and runtime state.",
+  "expected_issue": "Planner and executor interpret escalation differently: structural diff is silent (partial readonly_root_fs not in weakening lattice), but Z3 finds write_allowed violates intent — triangulation disagreement preserved. Operational interpretation: HOLD deployment until layers reconcile."
+}

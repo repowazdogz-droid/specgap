@@ -1,0 +1,7 @@
+{
+  "title": "MCP tool surface drift — read-only registry vs hidden write capability",
+  "stakeholder_intent": "The MCP agent must not escalate to write or admin capabilities. No privilege escalation of any kind is permitted. The callable tool surface must match the declared read-only registry.",
+  "formalized_policy": "MCP tools/list registers read-only GitHub tools only. The seccomp profile uses a syscall denylist blocking ptrace and clone. CAP_SYS_ADMIN is dropped.",
+  "implementation_claim": "create_pull_request is absent from tools/list, but tools/call still executes write tools. CAP_SYS_ADMIN is unavailable, but setuid binaries are allowed to execute.",
+  "expected_issue": "Operational analogue of tools/list vs tools/call mismatch: policy claims a bounded read surface, but the implementation claim admits a privilege escalation vector (setuid) not covered by the denylist — implication fails before any live MCP probe."
+}
