@@ -7,9 +7,9 @@ and replay tests. PolicyWitness and other tools reuse the same envelope later.
 from __future__ import annotations
 
 import hashlib
-import json
 from dataclasses import asdict
 
+import rfc8785
 from importlib.metadata import PackageNotFoundError, version
 
 from .cli import analyze
@@ -39,16 +39,6 @@ _LAYER_KEYS = (
 )
 
 
-def _canonical_json_bytes(value: object) -> bytes:
-    """Deterministic UTF-8 JSON for fingerprinting (sorted keys, compact)."""
-    return json.dumps(
-        value,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-    ).encode("utf-8")
-
-
 def specgap_input_payload(spec: SpecInput) -> dict:
     """Canonical ingress object for fingerprinting (excludes annotations)."""
     return {
@@ -59,9 +49,14 @@ def specgap_input_payload(spec: SpecInput) -> dict:
     }
 
 
+def ingress_fingerprint(ingress: dict) -> str:
+    """SHA-256 hex over RFC 8785 JCS bytes (matches @omega-protocol/contracts)."""
+    return hashlib.sha256(rfc8785.dumps(ingress)).hexdigest()
+
+
 def input_fingerprint(spec: SpecInput) -> str:
     """SHA-256 hex over canonical spec triple JSON."""
-    return hashlib.sha256(_canonical_json_bytes(specgap_input_payload(spec))).hexdigest()
+    return ingress_fingerprint(specgap_input_payload(spec))
 
 
 def _constraint_dict(constraint: Constraint) -> dict:

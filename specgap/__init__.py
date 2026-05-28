@@ -13,6 +13,7 @@ from .assurance import (
     SPECGAP_DETAIL_SCHEMA,
     SPECGAP_KIND,
     analyze_structured,
+    ingress_fingerprint,
     input_fingerprint,
 )
 
@@ -23,5 +24,6 @@ __all__ = [
     "SPECGAP_DETAIL_SCHEMA",
     "SPECGAP_KIND",
     "analyze_structured",
+    "ingress_fingerprint",
     "input_fingerprint",
 ]
