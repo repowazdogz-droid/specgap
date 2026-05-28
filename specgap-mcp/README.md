@@ -63,7 +63,7 @@ The server speaks MCP over stdin/stdout. Launch it via an MCP client (below), no
 
 | Tool | Wraps | Primary outputs |
 | --- | --- | --- |
-| `analyze_spec` | Standard triple analysis | `verdict`, divergence counts, `triangulation`, `report_path` |
+| `analyze_spec` | Standard triple analysis | **`result`** (`AssuranceResult` envelope), `report_path` |
 | `evaluate_candidates` | `--evaluate-candidates` | `candidate_outcomes`, `ordering`, `report_path` |
 | `boxarena_preflight` | `--boxarena-preflight` | `preflight_verdict`, `proceed_to_boxarena_advisory`, `evidence_path` |
 
@@ -85,14 +85,27 @@ Response (abridged):
 ```json
 {
   "tool": "analyze_spec",
-  "verdict": "divergence_detected",
-  "semantic_divergences": 3,
-  "failed_implication_checks": 2,
-  "triangulation": "agree",
   "report_path": ".../reports/mcp/analyze_sandbox_no_network.md",
-  "limitations": "Bounded by extracted constraints and the abstract sandbox model..."
+  "result": {
+    "assurance_result_schema": "1.0",
+    "kind": "specgap",
+    "producer": { "name": "specgap", "version": "0.1.0" },
+    "input_fingerprint": "<64-char hex>",
+    "verdict": "divergence_detected",
+    "availability": { "verdict": "available", "input_fingerprint": "available" },
+    "detail": { "specgap_detail_schema": "1.0", "triangulation": { "...": "..." } }
+  }
 }
 ```
+
+### `analyze_spec` response shape (v0.1)
+
+- **`result`** — canonical **`AssuranceResult`** envelope (`assurance_result_schema: "1.0"`, `kind: "specgap"`). Use this for new integrations.
+- **Deprecated top-level aliases** (one version, then removed): `verdict`, `intent_empty`, `semantic_divergences`, `high_severity_divergences`, `failed_implication_checks`, `implication_checks_total`, `triangulation`, `triangulation_records`, `extractor`, `title`, `limitations`. These mirror fields from `result` / `result.detail` for backward compatibility.
+
+Full JSON schemas: [`schemas/assurance-result-1.0.schema.json`](../schemas/assurance-result-1.0.schema.json), [`schemas/specgap-detail-1.0.schema.json`](../schemas/specgap-detail-1.0.schema.json).
+
+Python API: `from specgap import analyze_structured`.
 
 Triangulation disagreement example:
 

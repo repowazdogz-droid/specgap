@@ -13,6 +13,28 @@ from ._common import (
 )
 
 
+def _deprecated_aliases(result: dict) -> dict:
+    """Top-level MCP fields deprecated in favour of ``result`` (one version)."""
+    detail = result["detail"]
+    tri = detail["triangulation"]
+    return {
+        "extractor": detail["extractor_mode"],
+        "title": detail["title"],
+        "verdict": result["verdict"],
+        "intent_empty": detail["intent_empty"],
+        "semantic_divergences": detail["counts"]["semantic_divergences"],
+        "high_severity_divergences": detail["counts"]["high_severity_divergences"],
+        "failed_implication_checks": detail["counts"]["failed_implication_checks"],
+        "implication_checks_total": detail["counts"]["implication_checks_total"],
+        "triangulation": triangulation_label(
+            intent_empty=tri["intent_empty"],
+            any_disagreement=tri["any_disagreement"],
+        ),
+        "triangulation_records": tri["records"],
+        "limitations": detail["limitations"],
+    }
+
+
 def run(
     input: str,
     extractor: str = "rule",
@@ -20,10 +42,10 @@ def run(
 ) -> dict:
     """Run SpecGap analysis and return a bounded summary dict."""
     ensure_specgap_importable()
-    from specgap.cli import analyze
+    from specgap.assurance import build_assurance_envelope
     from specgap.models import SpecInput
     from specgap.reporter import build_report
-    from specgap.triangulation import triangulate_analysis
+    from specgap.cli import analyze
 
     if extractor not in ("rule", "fuzzy"):
         raise ValueError("extractor must be 'rule' or 'fuzzy'")
@@ -36,22 +58,7 @@ def run(
         __import__("json").loads(input_path.read_text(encoding="utf-8"))
     )
     analysis = analyze(spec, mode=extractor)
-    intent_empty = not analysis.by_source["stakeholder_intent"]
-    failed = sum(
-        1 for r in analysis.implications if r.status == "implication_failed"
-    )
-    tri = triangulate_analysis(
-        analysis.diff_result, analysis.implications, intent_empty=intent_empty
-    )
-
-    if intent_empty:
-        verdict = "extraction_failure"
-    elif failed or analysis.diff_result.high_severity:
-        verdict = "divergence_detected"
-    elif analysis.diff_result.divergences:
-        verdict = "divergence_detected"
-    else:
-        verdict = "no_divergence_detected"
+    result = build_assurance_envelope(analysis, spec, mode=extractor)
 
     out_path = resolve_output_path(
         output, default_name=f"analyze_{input_path.stem}.md"
@@ -66,28 +73,19 @@ def run(
     )
     out_path.write_text(report + "\n", encoding="utf-8")
 
-    return {
+    payload = {
         "tool": "analyze_spec",
         "input": str(input_path),
         "report_path": str(out_path),
-        "extractor": extractor,
-        "title": spec.title,
-        "verdict": verdict,
-        "intent_empty": intent_empty,
-        "semantic_divergences": len(analysis.diff_result.divergences),
-        "high_severity_divergences": len(analysis.diff_result.high_severity),
-        "failed_implication_checks": failed,
-        "implication_checks_total": len(analysis.implications),
-        "triangulation": triangulation_label(
-            intent_empty=intent_empty, any_disagreement=tri.any_disagreement
-        ),
-        "triangulation_records": [r.to_dict() for r in tri.records],
-        "limitations": (
-            "Bounded by extracted constraints and the abstract sandbox model. "
-            "Not runtime verification, not semantic understanding, not a "
-            "correctness or security guarantee."
-        ),
+        "result": result,
     }
+    payload.update(_deprecated_aliases(result))
+    payload["limitations"] = (
+        "Bounded by extracted constraints and the abstract sandbox model. "
+        "Not runtime verification, not semantic understanding, not a "
+        "correctness or security guarantee."
+    )
+    return payload
 
 
 def run_json(input: str, extractor: str = "rule", output: str | None = None) -> str:

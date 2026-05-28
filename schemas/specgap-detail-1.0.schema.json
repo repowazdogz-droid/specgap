@@ -1,0 +1,345 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://omegaprotocol.org/schemas/specgap-detail-1.0.schema.json",
+  "title": "SpecGapAssuranceDetail",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specgap_detail_schema",
+    "extractor_mode",
+    "encoding_version",
+    "tcb_scope",
+    "title",
+    "intent_empty",
+    "counts",
+    "triangulation",
+    "divergences",
+    "implication_checks",
+    "consistency_checks",
+    "extracted_constraints",
+    "limitations"
+  ],
+  "properties": {
+    "specgap_detail_schema": {
+      "const": "1.0"
+    },
+    "extractor_mode": {
+      "type": "string",
+      "enum": ["rule", "fuzzy"]
+    },
+    "encoding_version": {
+      "const": "sandbox-propositional/1.0"
+    },
+    "tcb_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "intent_empty": {
+      "type": "boolean"
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "semantic_divergences",
+        "high_severity_divergences",
+        "failed_implication_checks",
+        "implication_checks_total",
+        "inconsistent_layers"
+      ],
+      "properties": {
+        "semantic_divergences": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "high_severity_divergences": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed_implication_checks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "implication_checks_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inconsistent_layers": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "triangulation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intent_empty", "any_disagreement", "records"],
+      "properties": {
+        "intent_empty": {
+          "type": "boolean"
+        },
+        "any_disagreement": {
+          "type": "boolean"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/triangulationRecord"
+          }
+        }
+      }
+    },
+    "divergences": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/divergence"
+      }
+    },
+    "implication_checks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/implicationCheck"
+      }
+    },
+    "consistency_checks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/consistencyCheck"
+      }
+    },
+    "extracted_constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stakeholder_intent",
+        "formalized_policy",
+        "implementation_claim"
+      ],
+      "properties": {
+        "stakeholder_intent": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/constraint"
+          }
+        },
+        "formalized_policy": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/constraint"
+          }
+        },
+        "implementation_claim": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/constraint"
+          }
+        }
+      }
+    },
+    "limitations": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "definitions": {
+    "triangulationRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer",
+        "structural_diff",
+        "z3_implication",
+        "agreement",
+        "counterexample_present",
+        "tcb_scope"
+      ],
+      "properties": {
+        "layer": {
+          "type": "string"
+        },
+        "structural_diff": {
+          "type": "string",
+          "enum": ["divergence_detected", "no_divergence_detected"]
+        },
+        "z3_implication": {
+          "type": "string",
+          "enum": ["fails", "holds", "skipped"]
+        },
+        "agreement": {
+          "type": "boolean"
+        },
+        "counterexample_present": {
+          "type": "boolean"
+        },
+        "tcb_scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "divergence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "category",
+        "severity",
+        "summary",
+        "detail",
+        "sources"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "missing_constraint",
+            "weakened_constraint",
+            "contradictory_constraint",
+            "ambiguous_constraint",
+            "claim_not_implied"
+          ]
+        },
+        "category": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["high", "medium", "low"]
+        },
+        "summary": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "implicationCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "antecedent_label",
+        "consequent_label",
+        "status",
+        "implied",
+        "z3_check",
+        "counterexample",
+        "counterexample_atoms",
+        "consequent_violated"
+      ],
+      "properties": {
+        "antecedent_label": {
+          "type": "string"
+        },
+        "consequent_label": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["implied", "implication_failed", "no_consequent"]
+        },
+        "implied": {
+          "type": "boolean"
+        },
+        "z3_check": {
+          "type": "string"
+        },
+        "counterexample": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "counterexample_atoms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "consequent_violated": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "consistencyCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "consistent", "z3_check"],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "consistent": {
+          "type": "boolean"
+        },
+        "z3_check": {
+          "type": "string"
+        }
+      }
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "source",
+        "raw_text",
+        "params",
+        "method",
+        "ambiguous",
+        "confidence",
+        "requires_human_review"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "stakeholder_intent",
+            "formalized_policy",
+            "implementation_claim"
+          ]
+        },
+        "raw_text": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["rule", "fuzzy", "llm_stub"]
+        },
+        "ambiguous": {
+          "type": "boolean"
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "requires_human_review": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

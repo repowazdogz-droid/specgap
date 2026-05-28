@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://omegaprotocol.org/schemas/assurance-result-1.0.schema.json",
+  "title": "AssuranceResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assurance_result_schema",
+    "kind",
+    "producer",
+    "input_fingerprint",
+    "verdict",
+    "availability",
+    "detail"
+  ],
+  "properties": {
+    "assurance_result_schema": {
+      "const": "1.0"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["specgap"]
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "specgap"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "input_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "extraction_failure",
+        "divergence_detected",
+        "no_divergence_detected"
+      ]
+    },
+    "availability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "input_fingerprint"],
+      "properties": {
+        "verdict": {
+          "type": "string",
+          "enum": ["available"]
+        },
+        "input_fingerprint": {
+          "type": "string",
+          "enum": ["available"]
+        }
+      }
+    },
+    "detail": {
+      "oneOf": [
+        {
+          "$ref": "specgap-detail-1.0.schema.json"
+        }
+      ]
+    }
+  }
+}

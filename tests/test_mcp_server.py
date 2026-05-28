@@ -38,9 +38,19 @@ def test_mcp_tool_serializes(runner, arg):
 
 def test_analyze_spec_triangulation_disagreement():
     result = analyze_spec(input="examples/06_triangulation_disagreement.json")
+    assert result["result"]["assurance_result_schema"] == "1.0"
+    assert result["result"]["kind"] == "specgap"
     assert result["semantic_divergences"] == 0
     assert result["failed_implication_checks"] == 2
     assert result["triangulation"] == "disagree"
+
+
+def test_analyze_spec_nested_result_matches_deprecated_aliases():
+    result = analyze_spec(input="examples/sandbox_no_network.json")
+    nested = result["result"]
+    assert result["verdict"] == nested["verdict"]
+    assert result["intent_empty"] == nested["detail"]["intent_empty"]
+    assert result["semantic_divergences"] == nested["detail"]["counts"]["semantic_divergences"]
 
 
 def test_boxarena_preflight_does_not_run_boxarena():
